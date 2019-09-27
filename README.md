@@ -1,4 +1,4 @@
-EBNF-inspired pattern matching written in golang
+# EBNF-inspired pattern matching written in golang
 
 Following are some application for pattern matching:
 
