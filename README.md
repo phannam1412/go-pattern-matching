@@ -92,7 +92,6 @@ formula := FullSearch(And(
     Text("."),
     Alphabet,
 ), -1)
-}
 ```
 
 ### Extract emails from a bulk of text 
