@@ -1,6 +1,6 @@
 # EBNF-inspired pattern matching written in golang
 
-Following are some application for pattern matching:
+Following are some applications for pattern matching:
 
 ### Wrap all strings for translate
 
