@@ -24,7 +24,7 @@ func isset(theMap map[string]string, key string) bool {
 
 
 
-
+const separator = "+ _)(*&^%#@!~[];/.,\\{}|:\"<>?`-='\n\r\t$"
 var tries Expression
 var mapping map[string]string
 var Whitespace Expression
@@ -32,12 +32,14 @@ var SomeWhitespaces Expression
 var AnyWhitespaces Expression
 var Comma Expression
 var Dollar Expression
+var Hyphen Expression
 
 func init() {
 
 	Comma = Text(",")
 	Dollar = Text("$")
 	Whitespace = Text(" ")
+	Hyphen = Text("-")
 	SomeWhitespaces = Some(Whitespace)
 	AnyWhitespaces = Any(Whitespace)
 
@@ -122,7 +124,17 @@ func init() {
 
 
 
-
+func Alphabet(tokens []string, pos int) *Res {
+	res := strings.Contains(separator, tokens[pos])
+	if res == true {
+		return nil
+	}
+	return &Res{
+		Pos: pos + 1,
+		Expr: "alphabet",
+		Value: tokens[pos],
+	}
+}
 
 func Tokenize(text string) []string {
 	var res []string
