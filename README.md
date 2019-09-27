@@ -113,3 +113,41 @@ func main() {
 	}
 }
 ```
+
+# Extract emails
+
+input:
+```$xslt
+extract some emails like contact-me-me@yahoo.com, dev.to@gmail.com, 
+and exclude invalid emails like ^hello@wer.co 
+```
+
+output:
+```$xslt
+contact-me-me@yahoo.com
+to@gmail.com
+hello@wer.co
+```
+
+code:
+```$xslt
+package main
+
+import (
+	. "github.com/phannam1412/go-pattern-matching"
+)
+
+func main() {
+	input := `
+		extract some emails like contact-me-me@yahoo.com, dev.to@gmail.com, 
+		and exclude invalid emails like ^hello@wer.co 
+	`
+	tokens := Tokenize(input)
+	name := And(Alphabet, Any(And(Hyphen, Alphabet)))
+	formula := FullSearch(And(name,At,Alphabet,Dot,Alphabet,), -1)
+	parsed := formula(tokens, 0)
+	for _, v := range parsed.Children {
+		println(v.Value)
+	}
+}
+```

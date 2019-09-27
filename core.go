@@ -33,6 +33,8 @@ var AnyWhitespaces Expression
 var Comma Expression
 var Dollar Expression
 var Hyphen Expression
+var Dot Expression
+var At Expression
 
 func init() {
 
@@ -40,6 +42,8 @@ func init() {
 	Dollar = Text("$")
 	Whitespace = Text(" ")
 	Hyphen = Text("-")
+	Dot = Text(".")
+	At = Text("@")
 	SomeWhitespaces = Some(Whitespace)
 	AnyWhitespaces = Any(Whitespace)
 
