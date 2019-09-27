@@ -114,5 +114,4 @@ hello@wer.co
 ```$xslt
 name := And(Alphabet, Any(And(Hyphen, Alphabet)))
 formula := FullSearch(And(name,At,Alphabet,Dot,Alphabet,), -1)
-}
 ```
