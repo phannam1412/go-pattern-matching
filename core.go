@@ -249,7 +249,7 @@ func AtLeast(expr Expression, count int) Expression {
 				return &Res{
 					Pos: res.Pos,
 					Expr: "at_least",
-					Value: strings.Join(value, " "),
+					Value: strings.Join(value, ""),
 				}
 			}
 			pos++
@@ -268,7 +268,7 @@ func Some(expr Expression) Expression {
 					return &Res{
 						Pos: pos,
 						Expr: "at_least",
-						Value: strings.Join(value, " "),
+						Value: strings.Join(value, ""),
 					}
 				}
 				return nil
@@ -280,7 +280,7 @@ func Some(expr Expression) Expression {
 			return &Res{
 				Pos: pos,
 				Expr: "at_least",
-				Value: strings.Join(value, " "),
+				Value: strings.Join(value, ""),
 			}
 		}
 		return nil
@@ -303,7 +303,7 @@ func Any(expr Expression) Expression {
 					Pos: pos,
 					Expr: "any",
 					Children: children,
-					Value: strings.Join(values, " "),
+					Value: strings.Join(values, ""),
 				}
 			}
 
@@ -316,7 +316,7 @@ func Any(expr Expression) Expression {
 			Pos: pos,
 			Expr: "greedy",
 			Children: children,
-			Value: strings.Join(values, " "),
+			Value: strings.Join(values, ""),
 		}
 	}
 }
@@ -339,7 +339,7 @@ func Greedy(expr Expression, min int) Expression {
 					Pos: pos,
 					Expr: "greedy",
 					Children: children,
-					Value: strings.Join(values, " "),
+					Value: strings.Join(values, ""),
 				}
 			}
 
@@ -357,7 +357,7 @@ func Greedy(expr Expression, min int) Expression {
 			Pos: pos,
 			Expr: "greedy",
 			Children: children,
-			Value: strings.Join(values, " "),
+			Value: strings.Join(values, ""),
 		}
 	}
 }
@@ -435,7 +435,7 @@ func TextUntilEndAt(matchingForEnd Expression) Expression {
 		return &Res{
 			Pos: pos + a,
 			Expr: "text_until_end_at",
-			Value: strings.Join(result, " "),
+			Value: strings.Join(result, ""),
 		}
 	}
 }
@@ -463,7 +463,7 @@ func OneTokenExceptLineBreak(tokens []string, pos int) *Res {
 
 func PairSeparator(tokens []string, pos int) *Res {
 	main := Or(
-		Greedy(Or(Text(" "), Text("\t"), Text(":")), 2),
+		Greedy(Or(Whitespace, Text("\t"), Text(":")), 2),
 		Text(":"),
 	)
 	res := main(tokens, pos)
@@ -482,6 +482,22 @@ func Token(tokens []string, pos int) *Res {
 		Pos: pos + 1,
 		Expr: "token",
 		Value: tokens[pos],
+	}
+}
+
+func NotToken(token string) Expression {
+	return func(tokens []string, pos int) *Res {
+		if pos >= len(tokens) {
+			return nil
+		}
+		if tokens[pos] == token {
+			return nil
+		}
+		return &Res{
+			Pos: pos + 1,
+			Expr: "not_token",
+			Value: tokens[pos],
+		}
 	}
 }
 
@@ -658,9 +674,3 @@ func Normalize(res map[string]string) map[string]string {
     }
 	return res
 }
-
-
-
-
-
-
