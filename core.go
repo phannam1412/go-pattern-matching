@@ -12,7 +12,7 @@ func PrintJson(test interface{}) {
 }
 
 func JsonEncode(test interface{}) string {
-	tmp, _ := json.MarshalIndent(test, "", "    ")
+	tmp, _ := json.Marshal(test)
 	return string(tmp)
 }
 
@@ -25,8 +25,6 @@ func isset(theMap map[string]string, key string) bool {
 
 
 const separator = "+ _)(*&^%#@!~[];/.,\\{}|:\"<>?`-='\n\r\t$"
-var tries Expression
-var mapping map[string]string
 var Whitespace Expression
 var SomeWhitespaces Expression
 var AnyWhitespaces Expression
@@ -35,6 +33,7 @@ var Dollar Expression
 var Hyphen Expression
 var Dot Expression
 var At Expression
+var Equal Expression
 
 func init() {
 
@@ -44,89 +43,10 @@ func init() {
 	Hyphen = Text("-")
 	Dot = Text(".")
 	At = Text("@")
-	SomeWhitespaces = Some(Whitespace)
-	AnyWhitespaces = Any(Whitespace)
-
-	mapping = map[string]string {
-		"day of birth": "birthday",
-		"date of birth": "birthday",
-		"birthday": "birthday",
-
-		"e-mail address": "email",
-		"e-mail": "email",
-		"email": "email",
-
-		"home address": "address",
-		"contact address": "address",
-		"address": "address",
-
-		"height": "height",
-		"weight": "weight",
-
-		"full name": "fullname",
-
-		"phone number": "phone",
-		"hand phone": "phone",
-		"contact phone": "phone",
-		"tel": "phone",
-		"phone": "phone",
-		"mobile": "phone",
-
-		"sex": "sex",
-		"marital": "marital",
-		"dob": "birthday",
-		"position": "position",
-		"job level": "job_level",
-		"work place": "work_place",
-		"job category": "job_category",
-		"salary expected": "salary",
-		"salary": "salary",
-
-
-		"years of experience": "experience",
-		"experience": "experience",
-
-		"interests": "interest",
-
-
-		"highest degree": "highest_degree",
-		"language proficiency": "language_proficiency",
-		"most recent job": "most_recent_job",
-		"most recent company": "most_recent_company",
-		"current job level": "current_job_level",
-		"first name": "first_name",
-		"last name": "last_name",
-		"gender": "gender",
-		"nationality": "nationality",
-		"website": "website",
-		"web site": "website",
-		"birthplace": "birthplace",
-		"place of birth": "birthplace",
-		"languages": "language",
-		"language": "language",
-		"yahoo": "yahoo",
-		"skype": "skype",
-	}
-
-	var tmp []Expression
-	for wordForDetect := range mapping {
-		tmp = append(tmp, CaseInsensitive(Tokenize(wordForDetect)))
-	}
-	tries = Or(tmp...)
+	Equal = Text("=")
+	SomeWhitespaces = Label("some whitespaces", Some(Whitespace))
+	AnyWhitespaces = Label("any whitespaces", Any(Whitespace))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 func Alphabet(tokens []string, pos int) *Res {
 	res := strings.Contains(separator, tokens[pos])
@@ -165,11 +85,11 @@ func Tokenize(text string) []string {
 type Expression func(tokens []string, pos int) *Res
 
 type Res struct {
-	Pos int
-	Value string
-	Expr string
-	Children []Res
-	Data map[string]string
+	Pos int `json:"-",omitempty"`
+	Value string `json:",omitempty"`
+	Expr string `json:",omitempty"`
+	Children []Res `json:",omitempty"`
+	Data map[string]string `json:",omitempty"`
 }
 
 func And(expressions ...Expression) Expression {
@@ -252,28 +172,6 @@ func LookupForOne(expr Expression) Expression {
 	}
 }
 
-func AtLeast(expr Expression, count int) Expression {
-	return func(tokens []string, pos int) *Res {
-		var value []string
-		for a := 0; a < len(tokens) && pos < len(tokens); a++ {
-			res := expr(tokens, pos)
-			if res != nil {
-				return nil
-			}
-			value = append(value, res.Value)
-			if a >= count {
-				return &Res{
-					Pos: res.Pos,
-					Expr: "at_least",
-					Value: strings.Join(value, ""),
-				}
-			}
-			pos++
-		}
-		return nil
-	}
-}
-
 func Some(expr Expression) Expression {
 	return func(tokens []string, pos int) *Res {
 		var value []string
@@ -283,7 +181,7 @@ func Some(expr Expression) Expression {
 				if len(value) > 0 {
 					return &Res{
 						Pos: pos,
-						Expr: "at_least",
+						Expr: "some",
 						Value: strings.Join(value, ""),
 					}
 				}
@@ -295,7 +193,7 @@ func Some(expr Expression) Expression {
 		if len(value) > 0 {
 			return &Res{
 				Pos: pos,
-				Expr: "at_least",
+				Expr: "some",
 				Value: strings.Join(value, ""),
 			}
 		}
@@ -330,7 +228,7 @@ func Any(expr Expression) Expression {
 
 		return &Res{
 			Pos: pos,
-			Expr: "greedy",
+			Expr: "any",
 			Children: children,
 			Value: strings.Join(values, ""),
 		}
@@ -512,7 +410,7 @@ func NotToken(token string) Expression {
 		return &Res{
 			Pos: pos + 1,
 			Expr: "not_token",
-			Value: tokens[pos],
+			Value: "",
 		}
 	}
 }
@@ -522,21 +420,13 @@ func Email(tokens []string, pos int) *Res {
 	return formula(tokens, pos)
 }
 
-func Keyword(tokens []string, pos int) *Res {
-	res := tries(tokens, pos)
-	if res == nil {
-		return nil
+func Label(label string, expr Expression) Expression {
+	return func(tokens []string, pos int) *Res {
+		res := expr(tokens, pos)
+		if res == nil {
+			return nil
+		}
+		res.Expr = label
+		return res
 	}
-	keyword := res.Value
-	candidateField := mapping[keyword]
-	return &Res{
-		Pos: res.Pos,
-		Expr: "keyword",
-		Value: candidateField,
-	}
-}
-
-func OnePair(tokens []string, pos int) *Res {
-	main := And(Keyword, PairSeparator, TextUntilLineEnd)
-	return main(tokens, pos)
 }
