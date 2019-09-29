@@ -301,7 +301,7 @@ func CaseInsensitive(tokensForMatch []string) Expression {
 			return nil
 		}
 		for a := 0; a < len(tokensForMatch); a++ {
-			if !strings.EqualFold(tokensForMatch[a], tokens[pos + a]) {
+			if !strings.EqualFold(tokensForMatch[a], strings.ToLower(tokens[pos + a])) {
 				return nil
 			}
 		}
