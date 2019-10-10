@@ -34,6 +34,8 @@ var Hyphen Expression
 var Dot Expression
 var At Expression
 var Equal Expression
+var Colon Expression
+var Tab Expression
 
 func init() {
 
@@ -44,6 +46,8 @@ func init() {
 	Dot = Text(".")
 	At = Text("@")
 	Equal = Text("=")
+	Colon = Text(":")
+	Tab = Text("\t")
 	SomeWhitespaces = Label("some whitespaces", Some(Whitespace))
 	AnyWhitespaces = Label("any whitespaces", Any(Whitespace))
 }
@@ -377,8 +381,8 @@ func OneTokenExceptLineBreak(tokens []string, pos int) *Res {
 
 func PairSeparator(tokens []string, pos int) *Res {
 	main := Or(
-		Greedy(Or(Whitespace, Text("\t"), Text(":")), 2),
-		Text(":"),
+		Greedy(Or(Whitespace, Tab, Colon), 2),
+		Colon,
 	)
 	res := main(tokens, pos)
 	if res == nil {
