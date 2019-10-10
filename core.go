@@ -420,7 +420,7 @@ func NotToken(token string) Expression {
 }
 
 func Email(tokens []string, pos int) *Res {
-	formula := And(Token, Text("@"), Token, Text("."), Token)
+	formula := And(Token, Any(And(Dot, Token)), Text("@"), Token, Text("."), Token)
 	return formula(tokens, pos)
 }
 
