@@ -38,6 +38,7 @@ var Equal Expression
 var Colon Expression
 var Tab Expression
 var Plus Expression
+var Backsplash Expression
 
 func init() {
 
@@ -51,6 +52,7 @@ func init() {
 	Equal = Text("=")
 	Colon = Text(":")
 	Tab = Text("\t")
+	Backsplash = Text("/")
 	SomeWhitespaces = Label("some whitespaces", Some(Whitespace))
 	AnyWhitespaces = Label("any whitespaces", Any(Whitespace))
 }
@@ -180,6 +182,10 @@ func LookupForOne(expr Expression) Expression {
 }
 
 func Some(expr Expression) Expression {
+	return SomeWithMin(expr, 1)
+}
+
+func SomeWithMin(expr Expression, min int) Expression {
 	return func(tokens []string, pos int) *Res {
 		var value []string
 		for a := 0; a < len(tokens) && pos < len(tokens); a++ {
@@ -187,28 +193,28 @@ func Some(expr Expression) Expression {
 			
 			// Cannot match anymore ?
 			if res == nil {
-				if len(value) > 0 {
-					return &Res{
-						Pos: pos,
-						Expr: "some",
-						Value: strings.Join(value, ""),
-					}
+				if len(value) < min {
+					return nil
 				}
-				return nil
+				return &Res{
+					Pos: pos,
+					Expr: "some",
+					Value: strings.Join(value, ""),
+				}
 			}
 
 			// Continue matching
 			value = append(value, res.Value)
-			pos++
+			pos = res.Pos
 		}
-		if len(value) > 0 {
-			return &Res{
-				Pos: pos,
-				Expr: "some",
-				Value: strings.Join(value, ""),
-			}
+		if len(value) < min {
+			return nil
 		}
-		return nil
+		return &Res{
+			Pos: pos,
+			Expr: "some",
+			Value: strings.Join(value, ""),
+		}
 	}
 }
 
@@ -240,47 +246,6 @@ func Any(expr Expression) Expression {
 		return &Res{
 			Pos: pos,
 			Expr: "any",
-			Children: children,
-			Value: strings.Join(values, ""),
-		}
-	}
-}
-
-// Match all posibilities starting at the current pos, limit by min.
-func Greedy(expr Expression, min int) Expression {
-	return func(tokens []string, pos int) *Res {
-		var values []string
-		var children []Res
-		a := 0
-		for a = 0; a < len(tokens) && pos < len(tokens); a++ {
-			res := expr(tokens, pos)
-
-			// Cannot match anymore ?
-			if res == nil {
-				if a < min {
-					return nil
-				}
-				return &Res{
-					Pos: pos,
-					Expr: "greedy",
-					Children: children,
-					Value: strings.Join(values, ""),
-				}
-			}
-
-			values = append(values, res.Value)
-			children = append(children, *res)
-			pos++
-		}
-
-		// Match until the end.
-		if a < min {
-			return nil
-		}
-
-		return &Res{
-			Pos: pos,
-			Expr: "greedy",
 			Children: children,
 			Value: strings.Join(values, ""),
 		}
@@ -389,7 +354,7 @@ func OneTokenExceptLineBreak(tokens []string, pos int) *Res {
 func PairSeparator(tokens []string, pos int) *Res {
 	main := Or(
 		And(Any(Or(Whitespace,Tab)), Colon, Any(Or(Whitespace, Tab))),
-		Greedy(Or(Whitespace, Tab), 3),
+		SomeWithMin(Or(Whitespace, Tab), 3),
 	)
 	res := main(tokens, pos)
 	if res == nil {
