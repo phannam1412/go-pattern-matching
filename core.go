@@ -3,6 +3,7 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -36,9 +37,11 @@ var At Expression
 var Equal Expression
 var Colon Expression
 var Tab Expression
+var Plus Expression
 
 func init() {
 
+	Plus = Text("+")
 	Comma = Text(",")
 	Dollar = Text("$")
 	Whitespace = Text(" ")
@@ -181,6 +184,8 @@ func Some(expr Expression) Expression {
 		var value []string
 		for a := 0; a < len(tokens) && pos < len(tokens); a++ {
 			res := expr(tokens, pos)
+			
+			// Cannot match anymore ?
 			if res == nil {
 				if len(value) > 0 {
 					return &Res{
@@ -191,6 +196,8 @@ func Some(expr Expression) Expression {
 				}
 				return nil
 			}
+
+			// Continue matching
 			value = append(value, res.Value)
 			pos++
 		}
@@ -381,8 +388,8 @@ func OneTokenExceptLineBreak(tokens []string, pos int) *Res {
 
 func PairSeparator(tokens []string, pos int) *Res {
 	main := Or(
-		Greedy(Or(Whitespace, Tab, Colon), 2),
-		Colon,
+		And(Any(Or(Whitespace,Tab)), Colon, Any(Or(Whitespace, Tab))),
+		Greedy(Or(Whitespace, Tab), 3),
 	)
 	res := main(tokens, pos)
 	if res == nil {
@@ -400,6 +407,35 @@ func Token(tokens []string, pos int) *Res {
 		Pos: pos + 1,
 		Expr: "token",
 		Value: tokens[pos],
+	}
+}
+
+func isNumeric(s string) bool {
+	_, err := strconv.ParseFloat(s, 64)
+	return err == nil
+}
+
+func Number(tokens []string, pos int) *Res {
+	if !isNumeric(tokens[pos]) {
+		return nil
+	}
+	return &Res{
+		Pos: pos + 1,
+		Expr: "token",
+		Value: tokens[pos],
+	}
+}
+
+func LengthAtleast(expression Expression, minLength int) Expression {
+	return func(tokens []string, pos int) *Res {
+		res := expression(tokens, pos)
+		if res == nil {
+			return nil
+		}
+		if len(res.Value) < minLength {
+			return nil
+		}
+		return res
 	}
 }
 
