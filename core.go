@@ -271,15 +271,18 @@ func Text(str string) Expression {
 	}
 }
 
-func CaseInsensitive(tokensForMatch []string) Expression {
+func CaseInsensitive(token string) Expression {
+	tokensForMatch := Tokenize(token)
 	return func(tokens []string, pos int) *Res {
 		if pos + len(tokensForMatch) > len(tokens) {
 			return nil
 		}
+		//var res []string
 		for a := 0; a < len(tokensForMatch); a++ {
-			if !strings.EqualFold(tokensForMatch[a], strings.ToLower(tokens[pos + a])) {
+			if strings.ToLower(tokensForMatch[a]) != strings.ToLower(tokens[pos + a]) {
 				return nil
 			}
+			//res = append(res, tokens[pos+a])
 		}
 		return &Res{
 			Pos: pos + len(tokensForMatch),
@@ -415,7 +418,7 @@ func NotToken(token string) Expression {
 		return &Res{
 			Pos: pos + 1,
 			Expr: "not_token",
-			Value: "",
+			Value: tokens[pos],
 		}
 	}
 }
