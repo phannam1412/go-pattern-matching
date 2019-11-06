@@ -378,6 +378,23 @@ func Token(tokens []string, pos int) *Res {
 	}
 }
 
+func Ucfirst(tokens []string, pos int) *Res {
+	if pos >= len(tokens) {
+		return nil
+	}
+	if len(tokens[pos]) == 0 {
+		return nil
+	}
+	if tokens[pos][0] < 'A' || tokens[pos][0] > 'Z' {
+		return nil
+	}
+	return &Res{
+		Pos: pos + 1,
+		Expr: "token",
+		Value: tokens[pos],
+	}
+}
+
 func isNumeric(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
 	return err == nil
