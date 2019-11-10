@@ -418,6 +418,9 @@ func Token(tokens []string, pos int) *Res {
 }
 
 func SingleAlphabet(tokens []string, pos int) *Res {
+	if pos >= len(tokens) {
+		return nil
+	}
 	if len(tokens[pos]) > 1 {
 		return nil
 	}
