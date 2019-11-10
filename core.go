@@ -39,6 +39,8 @@ var Colon Expression
 var Tab Expression
 var Plus Expression
 var Backsplash Expression
+var NumberOrAlphabet Expression
+var NewLine Expression
 
 func init() {
 
@@ -52,7 +54,9 @@ func init() {
 	Equal = Text("=")
 	Colon = Text(":")
 	Tab = Text("\t")
+	NewLine = Text("\n")
 	Backsplash = Text("/")
+	NumberOrAlphabet = Or(Number, Alphabet)
 	SomeWhitespaces = Label("some whitespaces", Some(Whitespace))
 	AnyWhitespaces = Label("any whitespaces", Any(Whitespace))
 }
@@ -70,25 +74,41 @@ func Alphabet(tokens []string, pos int) *Res {
 }
 
 func Tokenize(text string) []string {
-	var res []string
-	word := ""
-	chars := "+ _)(*&^%#@!~[];/.,\\{}|:\"<>?`-='\n\r\t$"
+	var output []string
+	currentWord := ""
+	separators := "+ _)(*&^%#@!~[];/.,\\{}|:\"<>?`-='\n\r\t$"
+	var prevChar uint8
 	for a := 0; a < len(text); a++ {
-		char := text[a : a + 1]
-		if !strings.Contains(chars, char) {
-			word += char
-		} else {
-			if len(word) > 0 {
-				res = append(res, word)
+		currentChar := text[a : a + 1]
+
+		// separator
+		if strings.Contains(separators, currentChar) {
+			if len(currentWord) > 0 {
+				output = append(output, currentWord)
 			}
-			res = append(res, char)
-			word = ""
+			output = append(output, currentChar)
+			currentWord = ""
+			prevChar = currentChar[0]
+			continue
 		}
+
+		// transition from alphabet -> number and number -> alphabet
+		if (isNumber(prevChar) && !isNumber(currentChar[0])) || (!isNumber(prevChar) && isNumber(currentChar[0])) {
+			if len(currentWord) > 0 {
+				output = append(output, currentWord)
+			}
+			currentWord = currentChar
+			prevChar = currentChar[0]
+			continue
+		}
+
+		currentWord += currentChar
+		prevChar = currentChar[0]
 	}
-	if len(word) > 0 {
-		res = append(res, word)
+	if len(currentWord) > 0 {
+		output = append(output, currentWord)
 	}
-	return res
+	return output
 }
 
 type Expression func(tokens []string, pos int) *Res
@@ -123,6 +143,25 @@ func And(expressions ...Expression) Expression {
 			Children: children,
 			Value: strings.Join(value, ""),
 		}
+	}
+}
+
+func AndBut(should Expression, shouldNot ...Expression) Expression {
+	return func(tokens []string, pos int) *Res {
+		if pos >= len(tokens) {
+			return nil
+		}
+		first := should(tokens, pos)
+		if first == nil {
+			return nil
+		}
+		for _, v := range shouldNot {
+			second := v(tokens, pos)
+			if second != nil{
+				return nil
+			}
+		}
+		return first
 	}
 }
 
@@ -277,17 +316,17 @@ func CaseInsensitive(token string) Expression {
 		if pos + len(tokensForMatch) > len(tokens) {
 			return nil
 		}
-		//var res []string
+		var matched []string
 		for a := 0; a < len(tokensForMatch); a++ {
 			if strings.ToLower(tokensForMatch[a]) != strings.ToLower(tokens[pos + a]) {
 				return nil
 			}
-			//res = append(res, tokens[pos+a])
+			matched = append(matched, tokens[pos + a])
 		}
 		return &Res{
 			Pos: pos + len(tokensForMatch),
 			Expr: "case_insensitive",
-			Value: strings.Join(tokensForMatch, ""),
+			Value: strings.Join(matched, ""),
 		}
 	}
 }
@@ -378,6 +417,21 @@ func Token(tokens []string, pos int) *Res {
 	}
 }
 
+func SingleAlphabet(tokens []string, pos int) *Res {
+	if len(tokens[pos]) > 1 {
+		return nil
+	}
+	char := tokens[pos][0]
+	if (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') {
+		return &Res{
+			Pos: pos + 1,
+			Expr: "token",
+			Value: tokens[pos],
+		}
+	}
+	return nil
+}
+
 func Ucfirst(tokens []string, pos int) *Res {
 	if pos >= len(tokens) {
 		return nil
@@ -395,9 +449,27 @@ func Ucfirst(tokens []string, pos int) *Res {
 	}
 }
 
+func AllUppercases(tokens []string, pos int) *Res {
+	if pos >= len(tokens) {
+		return nil
+	}
+	if strings.ToUpper(tokens[pos]) == tokens[pos] {
+		return &Res{
+			Pos:   pos + 1,
+			Expr:  "token",
+			Value: tokens[pos],
+		}
+	}
+	return nil
+}
+
 func isNumeric(s string) bool {
 	_, err := strconv.ParseFloat(s, 64)
 	return err == nil
+}
+
+func isNumber(char uint8) bool {
+	return char >= '0' && char <= '9';
 }
 
 func Number(tokens []string, pos int) *Res {
@@ -441,7 +513,14 @@ func NotToken(token string) Expression {
 }
 
 func Email(tokens []string, pos int) *Res {
-	formula := And(Token, Any(And(Dot, Token)), Text("@"), Token, Text("."), Token)
+	formula := And(
+		Some(NumberOrAlphabet),
+		Any(And(Dot, Some(NumberOrAlphabet))),
+		Text("@"),
+		Some(NumberOrAlphabet),
+		Text("."),
+		Alphabet,
+	)
 	return formula(tokens, pos)
 }
 
