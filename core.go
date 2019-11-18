@@ -172,7 +172,7 @@ func FullSearch(expr Expression, limit int) Expression {
 		var value []string
 
 		// Travel through every possible position of token list to find as much matches as possible.
-		for a := 0; a < len(tokens) && pos < len(tokens); a++ {
+		for a := 0; a < len(tokens) && pos < len(tokens);  {
 
 			// Is there any match at this position ?
 			res := expr(tokens, pos)
@@ -188,6 +188,11 @@ func FullSearch(expr Expression, limit int) Expression {
 			if len(value) == limit && limit != -1 {
 				break
 			}
+			if a <= pos {
+				a++
+			} else {
+				a = pos
+			}
 		}
 
 		if value == nil {
@@ -198,7 +203,7 @@ func FullSearch(expr Expression, limit int) Expression {
 			Pos: pos,
 			Expr: "full_search",
 			Children: children,
-			Value: strings.Join(value, ""),
+			Value: strings.Join(value, ","),
 		}
 	}
 }
