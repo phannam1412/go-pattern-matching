@@ -41,7 +41,8 @@ var Plus Expression
 var Backsplash Expression
 var NumberOrAlphabet Expression
 var NewLine Expression
-
+var OpenParenthese Expression
+var CloseParenthese Expression
 func init() {
 
 	Plus = Text("+")
@@ -59,6 +60,8 @@ func init() {
 	NumberOrAlphabet = Or(Number, Alphabet)
 	SomeWhitespaces = Label("some whitespaces", Some(Whitespace))
 	AnyWhitespaces = Label("any whitespaces", Any(Whitespace))
+	OpenParenthese = Text("(")
+	CloseParenthese = Text(")")
 }
 
 func Alphabet(tokens []string, pos int) *Res {
