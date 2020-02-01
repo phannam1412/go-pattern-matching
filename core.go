@@ -484,7 +484,10 @@ func isNumber(char uint8) bool {
 }
 
 func Number(tokens []string, pos int) *Res {
-	if !isNumeric(tokens[pos]) {
+    if pos >= len(tokens) {
+        return nil
+    }
+    if !isNumeric(tokens[pos]) {
 		return nil
 	}
 	return &Res{
