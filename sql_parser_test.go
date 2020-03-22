@@ -8,26 +8,26 @@ package parser_test
 //func testSqlParser(t *testing.T, formula Expression, tests []string) {
 //	text := "INSERT INTO user(username, pass) VALUES ('phannam1412', 'testpass')"
 //	SqlValue := ""
-//	ColumnList := And(
+//	ColumnList := Combine(
 //		Alphabet,
-//		Any(And(Comma, Alphabet)),
+//		Any(Combine(Comma, Alphabet)),
 //	)
-//	InsertHead := And(
+//	InsertHead := Combine(
 //		Text("INSERT INTO "),
 //		Alphabet,
 //		OpenParenthese,
 //		ColumnList,
 //		CloseParenthese,
 //	)
-//	InsertBody := And(
+//	InsertBody := Combine(
 //		Text("VALUES"),
 //		SomeWhitespaces,
 //		OpenParenthese,
 //		SqlValue,
-//		And(Any(Comma, SqlValue)),
+//		Combine(Any(Comma, SqlValue)),
 //		CloseParenthese,
 //	)
-//	InsertStatement := And(InsertHead, SomeWhitespaces, InsertBody)
+//	InsertStatement := Combine(InsertHead, SomeWhitespaces, InsertBody)
 //	formula := InsertStatement
 //	res := formula(Tokenize(text), 0)
 //	if res == nil {

@@ -124,7 +124,7 @@ type Res struct {
 	Data map[string]string `json:",omitempty"`
 }
 
-func And(expressions ...Expression) Expression {
+func Combine(expressions ...Expression) Expression {
 	return func(tokens []string, pos int) *Res {
 		if pos >= len(tokens) {
 			return nil
@@ -403,7 +403,7 @@ func OneTokenExceptLineBreak(tokens []string, pos int) *Res {
 
 func PairSeparator(tokens []string, pos int) *Res {
 	main := Or(
-		And(Any(Or(Whitespace,Tab)), Colon, Any(Or(Whitespace, Tab))),
+		Combine(Any(Or(Whitespace,Tab)), Colon, Any(Or(Whitespace, Tab))),
 		SomeWithMin(Or(Whitespace, Tab), 3),
 	)
 	res := main(tokens, pos)
@@ -527,9 +527,9 @@ func NotToken(token string) Expression {
 }
 
 func Email(tokens []string, pos int) *Res {
-	formula := And(
+	formula := Combine(
 		Some(NumberOrAlphabet),
-		Any(And(Dot, Some(NumberOrAlphabet))),
+		Any(Combine(Dot, Some(NumberOrAlphabet))),
 		Text("@"),
 		Some(NumberOrAlphabet),
 		Text("."),
