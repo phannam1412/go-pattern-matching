@@ -43,6 +43,7 @@ var NumberOrAlphabet Expression
 var NewLine Expression
 var OpenParenthese Expression
 var CloseParenthese Expression
+var Sharp Expression
 func init() {
 
 	Plus = Text("+")
@@ -62,6 +63,7 @@ func init() {
 	AnyWhitespaces = Label("any whitespaces", Any(Whitespace))
 	OpenParenthese = Text("(")
 	CloseParenthese = Text(")")
+	Sharp = Text("#")
 }
 
 func Alphabet(tokens []string, pos int) *Res {
@@ -142,7 +144,7 @@ func Combine(expressions ...Expression) Expression {
 		}
 		return &Res{
 			Pos: pos,
-			Expr: "and",
+			Expr: "combine",
 			Children: children,
 			Value: strings.Join(value, ""),
 		}
@@ -365,6 +367,7 @@ func TextUntilEndAt(matchingForEnd Expression) Expression {
 		a := 0
 		for a = 0; a + pos < len(tokens); a++ {
 			if matchingForEnd(tokens, pos + a) != nil {
+				result = append(result, tokens[pos + a])
 				break
 			}
 			result = append(result, tokens[pos + a])
@@ -373,7 +376,7 @@ func TextUntilEndAt(matchingForEnd Expression) Expression {
 			return nil
 		}
 		return &Res{
-			Pos: pos + a,
+			Pos: pos + a + 1,
 			Expr: "text_until_end_at",
 			Value: strings.Join(result, ""),
 		}
