@@ -404,22 +404,6 @@ func OneTokenExceptLineBreak(tokens []string, pos int) *Res {
 	}
 }
 
-func PairSeparator(tokens []string, pos int) *Res {
-	main := Or(
-		Combine(Any(Or(Whitespace,Tab)), Colon, Any(Or(Whitespace, Tab))),
-		SomeWithMin(Or(Whitespace, Tab), 3),
-	)
-	res := main(tokens, pos)
-	if res == nil {
-		return nil
-	}
-	return &Res{
-		Pos: res.Pos,
-		Expr: "pair_separator",
-		Value: res.Value,
-	}
-}
-
 func Token(tokens []string, pos int) *Res {
 	return &Res{
 		Pos: pos + 1,
@@ -507,6 +491,19 @@ func LengthAtleast(expression Expression, minLength int) Expression {
 			return nil
 		}
 		if len(res.Value) < minLength {
+			return nil
+		}
+		return res
+	}
+}
+
+func LengthInRange(expression Expression, minLength int, maxLength int) Expression {
+	return func(tokens []string, pos int) *Res {
+		res := expression(tokens, pos)
+		if res == nil {
+			return nil
+		}
+		if len(res.Value) < minLength && len(res.Value) > maxLength {
 			return nil
 		}
 		return res
