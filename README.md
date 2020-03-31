@@ -25,7 +25,7 @@ function sayHello() {
 package main
 
 import (
-	. "github.com/phannam1412/go-pattern-matching"
+	. "github.com/phannam1412/go-pattern-matching/parser"
 	"strings"
 )
 
